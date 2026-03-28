@@ -4,11 +4,11 @@ import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // In-memory session store: sessionId → message history
 const sessions = new Map();
@@ -38,10 +38,7 @@ Please recommend the perfect smoothie or juice for me.`;
   history.push({ role: 'user', content: userMessage });
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 800,
-      system: `You are a wellness smoothie expert at a NYC juice bar called GreenMatch. You know every ingredient's health benefit and how to craft personalized blends.
+    const systemPrompt = `You are a wellness smoothie expert at a NYC juice bar called GreenMatch. You know every ingredient's health benefit and how to craft personalized blends.
 
 Always respond with ONLY valid JSON — no markdown, no preamble:
 {
@@ -60,11 +57,15 @@ Rules:
 - Include 5-7 ingredients with amounts
 - Benefits must directly address the stated health goal
 - Upsell must be genuinely complementary, not just any add-on
-- Vary recommendations — never repeat the same smoothie in a session`,
-      messages: history
+- Vary recommendations — never repeat the same smoothie in a session`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      max_tokens: 800,
+      messages: [{ role: 'system', content: systemPrompt }, ...history]
     });
 
-    const text = response.content[0].text;
+    const text = completion.choices[0].message.content;
     history.push({ role: 'assistant', content: text });
     sessions.set(sessionId, history);
 
