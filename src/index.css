@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #0a1a10;
+  color: #f0fdf4;
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .bg-dark { background-color: #0a1a10; }
+  .bg-dark-l { background-color: #0f2318; }
+}
