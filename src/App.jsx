@@ -12,11 +12,11 @@ export default function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    track('page_visit', sessionId.current);
+    track('session_start', { app: 'greenmatch' });
   }, []);
 
   const fetchRecommendation = useCallback(async (ans, tryAnother = false) => {
-    track('recommendation_requested', sessionId.current);
+    track('recommendation_requested', { app: 'greenmatch' });
     setLoading(true);
     setError(null);
     try {
@@ -27,7 +27,7 @@ export default function App() {
       });
       if (!res.ok) throw new Error('Failed to get recommendation');
       const data = await res.json();
-      track('recommendation_received', sessionId.current);
+      track('recommendation_received', { app: 'greenmatch' });
       setRecommendation(data);
       setView('result');
     } catch (err) {

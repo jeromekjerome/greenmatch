@@ -6,7 +6,7 @@ import mixpanel from 'mixpanel-browser';
 const TOKEN = import.meta.env.VITE_MIXPANEL_TOKEN;
 
 if (TOKEN) {
-  mixpanel.init(TOKEN, { persistence: 'localStorage', track_pageview: false });
+  mixpanel.init(TOKEN, { persistence: 'localStorage', track_pageview: true });
 }
 
 /**
