@@ -1,14 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { track } from './analytics.js';
 import Quiz from './components/Quiz.jsx';
 import ResultCard from './components/ResultCard.jsx';
-
-function track(event, sessionId) {
-  fetch('/api/analytics', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ event, sessionId }),
-  }).catch(() => {});
-}
 
 export default function App() {
   const sessionId = useRef(crypto.randomUUID());
