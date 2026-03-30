@@ -1,6 +1,14 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Quiz from './components/Quiz.jsx';
 import ResultCard from './components/ResultCard.jsx';
+
+function track(event, sessionId) {
+  fetch('/api/analytics', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event, sessionId }),
+  }).catch(() => {});
+}
 
 export default function App() {
   const sessionId = useRef(crypto.randomUUID());
@@ -10,7 +18,12 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    track('page_visit', sessionId.current);
+  }, []);
+
   const fetchRecommendation = useCallback(async (ans, tryAnother = false) => {
+    track('recommendation_requested', sessionId.current);
     setLoading(true);
     setError(null);
     try {
@@ -21,6 +34,7 @@ export default function App() {
       });
       if (!res.ok) throw new Error('Failed to get recommendation');
       const data = await res.json();
+      track('recommendation_received', sessionId.current);
       setRecommendation(data);
       setView('result');
     } catch (err) {
