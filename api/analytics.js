@@ -1,7 +1,8 @@
 // Analytics endpoint: POST /api/analytics (track event), GET /api/analytics (dashboard)
-// Uses in-memory Map; swap kv.incr() calls when Vercel KV is provisioned.
+// Uses @vercel/kv for durable persistence across cold starts.
+import { kv } from '@vercel/kv';
+
 const APP = 'greenmatch';
-const counts = new Map();
 
 function isoWeek() {
   const d = new Date();
@@ -10,34 +11,34 @@ function isoWeek() {
   return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
-function incr(event) {
-  const k = `${APP}:${event}:${isoWeek()}`;
-  counts.set(k, (counts.get(k) || 0) + 1);
+function key(event) {
+  return `${APP}:${event}:${isoWeek()}`;
 }
 
-function get(event) {
-  return counts.get(`${APP}:${event}:${isoWeek()}`) || 0;
-}
-
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { event } = req.body || {};
     if (!event) return res.status(400).json({ error: 'event required' });
-    incr(event);
+    await kv.incr(key(event));
     return res.json({ ok: true });
   }
 
   if (req.method === 'GET') {
-    const pageVisits = get('page_visit');
-    const featureUsed = get('recommendation_requested');
-    const conversions = get('recommendation_received');
+    const [pageVisits, featureUsed, conversions] = await Promise.all([
+      kv.get(key('page_visit')),
+      kv.get(key('recommendation_requested')),
+      kv.get(key('recommendation_received')),
+    ]);
+    const pv = pageVisits || 0;
+    const fu = featureUsed || 0;
+    const cv = conversions || 0;
     return res.json({
       app: APP,
       week: isoWeek(),
-      pageVisits,
-      featureUsed,
-      conversions,
-      conversionRate: pageVisits > 0 ? `${Math.round((conversions / pageVisits) * 100)}%` : '0%',
+      pageVisits: pv,
+      featureUsed: fu,
+      conversions: cv,
+      conversionRate: pv > 0 ? `${Math.round((cv / pv) * 100)}%` : '0%',
     });
   }
 

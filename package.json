@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vercel/kv": "^1.0.0",
     "openai": "^4.77.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
